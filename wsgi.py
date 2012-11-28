@@ -1,15 +1,24 @@
 from wsgiref.simple_server import make_server
 
 def simple_app(environ, start_response):
-	response_body = 'HELLO MY FRIEND'
+	response_body = ['%s: %s' % (key, value) for key, value in sorted(environ.items())]
+	response_body = ''.join(response_body)
 
-	
+	response_body = ['The beginning\n' + '#' * 20 + '\n', 
+					response_body,
+					'#' * 20 + '\n',
+					'The end\n']
+
+	content_length = 0
+	for item in response_body:
+		content_length += len(item)
+
 	status = '200 OK'
 	response_headers = [('Content_Type', 'text_plain'),
-						('Content_Length', str(len(response_body)))]
+						('Content_Length', str(content_length))]
 	start_response(status, response_headers)
 
-	return [response_body]
+	return response_body
 
 
 #instantiate the wsgi server
