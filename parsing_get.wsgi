@@ -31,7 +31,7 @@ def simple_app(environ, start_response):
 
 	#returns a dictionary containing lists as values
 	d = parse_qs(environ['QUERY_STRING'])
-
+ 
 	#this idiom issues a list containing a default value
 	age = d.get('age', [''])[0] #returns the first age value
 	hobbies = d.get('hobbies', [])
