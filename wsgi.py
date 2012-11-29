@@ -6,7 +6,7 @@ def simple_app(environ, start_response):
 
 	response_body = ['The beginning\n' + '#' * 20 + '\n', 
 					response_body,
-					'#' * 20 + '\n',
+					'\n' + '#' * 20 + '\n',
 					'The end\n']
 
 	content_length = 0

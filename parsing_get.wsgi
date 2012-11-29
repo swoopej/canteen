@@ -27,8 +27,25 @@ html = """
 </body>
 </html>"""
 
+
 def simple_app(environ, start_response):
 
+	if environ['PATH_INFO'] == '/':
+		response_body = construct_body(environ)
+	else:
+		response_body = "That is an unknown path"
+
+	status = '200 OK'
+	response_headers = [('Content_Type', 'text_plain'),
+						('Content_Length', str(len(response_body)))]
+	start_response(status, response_headers)
+	return [response_body]
+	
+	#def router(rule):
+	#	def decorator(f):
+
+def construct_body(environ):
+	
 	#returns a dictionary containing lists as values
 	d = parse_qs(environ['QUERY_STRING'])
  
@@ -40,16 +57,8 @@ def simple_app(environ, start_response):
 	age = escape(age)
 	hobbies = [escape(hobby) for hobby in hobbies]
 
-	response_body = html % (age or 'Empty',
-						', '.join(hobbies or ['No Hobbies']))
-
-	status = '200 OK'
-	response_headers = [('Content_Type', 'text_plain'),
-						('Content_Length', str(len(response_body)))]
-	start_response(status, response_headers)
-
-	return [response_body]
-
+	return html % (age or 'Empty',
+					', '.join(hobbies or ['No Hobbies']))
 
 #instantiate the wsgi server
 #receives request, passes to wsgi app
