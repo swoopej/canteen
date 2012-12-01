@@ -29,13 +29,16 @@ html = """
 
 
 def simple_app(environ, start_response):
+	status = None
 
 	if environ['PATH_INFO'] == '/':
 		response_body = construct_body(environ)
+		status = '200 OK'
 	else:
 		response_body = "That is an unknown path"
+		status = "404 Not Found"
 
-	status = '200 OK'
+
 	response_headers = [('Content_Type', 'text_plain'),
 						('Content_Length', str(len(response_body)))]
 	start_response(status, response_headers)

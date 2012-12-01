@@ -39,7 +39,7 @@ class Canteen:
 		httpd = make_server(
 			'localhost', 
 			8051,
-			app.wsgi_app
+			self.wsgi_app
 			)
 
 		httpd.serve_forever()
@@ -50,8 +50,11 @@ class Canteen:
 		self.environ = {} if environ is None else environ
 		self.start = start_response
 
-		if environ['PATH_INFO'] == '/':
-			response_body = self.construct_body(environ)
+		print environ['PATH_INFO']
+		path = self.parse_path(environ['PATH_INFO'])
+
+		if path:
+			response_body = path() #calls the function in url-routing dict
 			status = "200 OK"
 		else:
 			response_body = "That is an unknown path"
@@ -62,6 +65,20 @@ class Canteen:
 		start_response(status, response_headers)
 		return [response_body]
 
+	def parse_path(self, path):
+		if path in self.routes:
+			return self.routes[path]
+		else:
+			return None
+
+	def add_route(self, path):
+		def decorator(f):
+			self.add_url(path, f)
+			return f
+		return decorator 	
+
+	def add_url(self, path, view_func):
+		self.routes[path] = view_func
 
 	def construct_body(self, environ):
 		
@@ -83,3 +100,5 @@ class Canteen:
 if __name__ == "__main__":
 	app = Canteen()
 	app.run_server()
+
+
