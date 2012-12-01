@@ -4,28 +4,6 @@ from urlparse import parse_qs
 import cgitb
 cgitb.enable()
 
-html = """
-<html>
-<body>
-	<form method="get" action="parsing_get.wsgi">
-	  <p>
-	    Age: <input type="text" name="age">
-	  </p>
-	  <p>
-	    Hobbies:
-	    <input name="hobbies" type="checkbox" value="software"> Software
-	    <input name="hobbies" type="checkbox" value="tuning"> Auto Tuning
-	  </p>
-	  <p>
-	    <input type="submit" value="Submit">
-	  </p>
-	</form>
-	<p>
-	  Age: %s<br>
-	  Hobbies: %s
-	</p>
-</body>
-</html>"""
 
 class Canteen:
 
