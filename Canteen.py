@@ -28,7 +28,6 @@ class Canteen:
 		self.environ = {} if environ is None else environ
 		self.start = start_response
 
-		print environ['PATH_INFO']
 		path = self.parse_path(environ['PATH_INFO'])
 
 		if path:
@@ -38,12 +37,13 @@ class Canteen:
 			response_body = "That is an unknown path"
 			status = "404 Not Found"
 
-		response_headers = [('Content_Type', 'text_plain'),
+		response_headers = [('Content_Type', 'text/html'),
 							('Content_Length', str(len(response_body)))]
 		start_response(status, response_headers)
 		return [response_body]
 
 	def parse_path(self, path):
+		tokens = path.split('/')
 		if path in self.routes:
 			return self.routes[path]
 		else:
@@ -57,6 +57,7 @@ class Canteen:
 
 	def add_url(self, path, view_func):
 		self.routes[path] = view_func
+
 
 	def construct_body(self, environ):
 		
