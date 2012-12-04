@@ -9,9 +9,11 @@ def front_page():
 
 @app.add_route('/hello/<user>/')
 def hello_sir(user):
-	return 'Top of the morning to you ', user
+	return 'Top of the morning to you ' + str(user)
 
-
+@app.add_route('goodbye/<user>/')
+def goodday_sir(user):
+	return 'Good day to you ' + str(user)
 
 app.run_server()
 
