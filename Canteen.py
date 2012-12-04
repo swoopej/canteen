@@ -39,11 +39,15 @@ class Canteen:
 		'''
 
 
+
 		self.environ = {} if environ is None else environ
 		self.start = start_response
 
-		print '\n\npath info: ', environ['PATH_INFO']
-		path, args = self.route_request(environ['PATH_INFO'], environ['QUERY_STRING'])
+		
+		if environ['QUERY_STRING']:
+			path, args = self.route_request(environ['PATH_INFO'], environ['REQUEST_METHOD'], environ['QUERY_STRING'])
+		else:
+			path = self.route_request(environ['PATH_INFO'], environ['REQUEST_METHOD'])
 
 		if path:
 			response_body = path(*args) #unpacks the arg dict returned from route_request
@@ -58,16 +62,16 @@ class Canteen:
 		start_response(status, response_headers)
 		return [response_body]
 
-	def route_request(self, path_info, query_string):
+	def route_request(self, path_info, request_method, query_string = None):
 		'''   
 		path parameter and query string are from the environ dict
 		'''
 
 		path = path_info
-		args = parse_qs(query_string) #returns a dict 
 
 		arg_list = []
-		if args:
+		if query_string:
+			args = parse_qs(query_string) #returns a dict 
 			for k, v in args.items():
 				arg_list.append(v)
 

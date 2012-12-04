@@ -1,0 +1,9 @@
+Canteen is an in progress Python web framework.  It has a WSGI app that should be compatible with any WSGI server (although I haven't tested yet).
+
+So far, users can add functions in the following format:
+
+@app.add_route(/hello)
+def say_hello(user):
+	return 'Top of the morning, ', user
+
+currently adding support for different request methods and session management.
