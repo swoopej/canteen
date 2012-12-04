@@ -7,9 +7,9 @@ app = Canteen()
 def front_page():
 	return 'This is the front page'
 
-@app.add_route('/hello/')
-def hello_sir():
-	return 'Top of the morning to you '
+@app.add_route('/hello/<user>/')
+def hello_sir(user):
+	return 'Top of the morning to you ', user
 
 
 

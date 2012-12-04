@@ -1,6 +1,8 @@
 from wsgiref.simple_server import make_server
 from cgi import escape
 from urlparse import parse_qs
+from rule import Rule
+import re
 import cgitb
 cgitb.enable()
 
@@ -8,7 +10,7 @@ cgitb.enable()
 class Canteen:
 
 	def __init__(self):
-		self.routes = {}
+		self.routes = []
 
 	def run_server(self):
 		#instantiate the wsgi server
@@ -43,37 +45,24 @@ class Canteen:
 		return [response_body]
 
 	def parse_path(self, path):
-		tokens = path.split('/')
-		if path in self.routes:
-			return self.routes[path]
+		for route in self.routes:
+			if route.path == path:
+				return route.endpoint
 		else:
 			return None
 
-	def add_route(self, path):
+	def add_route(self, path, method= 'GET'):
 		def decorator(f):
-			self.add_url(path, f)
-			return f
+			args = self.add_url(path, f)
+			return f(*args)
 		return decorator 	
 
 	def add_url(self, path, view_func):
-		self.routes[path] = view_func
+		new_rule = Rule(path, view_func)
+		args = new_rule.get_args()
+		self.routes.append(new_rule)
+		return args
 
-
-	def construct_body(self, environ):
-		
-		#returns a dictionary containing lists as values
-		d = parse_qs(environ['QUERY_STRING'])
-	 
-		#this idiom issues a list containing a default value
-		age = d.get('age', [''])[0] #returns the first age value
-		hobbies = d.get('hobbies', [])
-
-		#escape '&', '<' and '>' in string to HTML-safe sequence
-		age = escape(age)
-		hobbies = [escape(hobby) for hobby in hobbies]
-
-		return html % (age or 'Empty',
-						', '.join(hobbies or ['No Hobbies']))
 
 
 if __name__ == "__main__":
