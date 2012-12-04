@@ -6,4 +6,4 @@ So far, users can add functions in the following format:
 def say_hello(user):
 	return 'Top of the morning, ', user
 
-currently adding support for different request methods and session management.
+coming soon: support for different request methods, session management, mime types.

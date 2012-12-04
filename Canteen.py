@@ -43,18 +43,14 @@ class Canteen:
 		self.environ = {} if environ is None else environ
 		self.start = start_response
 
-		
-		if environ['QUERY_STRING']:
-			path, args = self.route_request(environ['PATH_INFO'], environ['REQUEST_METHOD'], environ['QUERY_STRING'])
-		else:
-			path, args = self.route_request(environ['PATH_INFO'], environ['REQUEST_METHOD'])
+		path, args, method = self.route_request(environ)
 
 
 		if path and args:
 			response_body = path(*args) #unpacks the arg dict returned from route_request
 			status = "200 OK"
 		elif path:
-			response_body = path() #unpacks the arg dict returned from route_request
+			response_body = path() #no args
 			status = "200 OK"
 		else:
 			response_body = "That is an unknown path"
@@ -66,25 +62,41 @@ class Canteen:
 		start_response(status, response_headers)
 		return [response_body]
 
-	def route_request(self, path_info, request_method, query_string = None):
-		'''   
-		path parameter and query string are from the environ dict
-		'''
+	def route_request(self, environ):
 
-		path = path_info
+		path = environ['PATH_INFO']
+		request_method = environ['REQUEST_METHOD']
+		query_string =  environ['QUERY_STRING']
 
+		#the environ variable CONTENT_LENGTH may be empty or missing
+		try:
+			request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+		except (ValueError):
+			request_body_size = 0
+			
+		wsgi_input = environ['wsgi.input'].read(request_body_size)
+		post_data = parse_qs(wsgi_input)
+
+		#parses url query string if present and method is get
 		arg_list = []
-		if query_string:
-			args = parse_qs(query_string) #returns a dict 
-			for k, v in args.items():
-				arg_list.append(v)
+		if request_method == 'GET' and query_string:
+			arg_list = self.parse_args(query_string)
 
 
 		for route in self.routes:
 			if route.path == path and request_method in route.get_methods():
-				return route.endpoint, arg_list
+				return route.endpoint, arg_list, request_method
 		else:
-			return None
+			return None, None, None
+
+	def parse_args(self, query_string):
+		'''parses the query string in url if present'''
+		arg_list = []
+		args = parse_qs(query_string)
+		for k, v in args.items():
+			arg_list.append(v)
+
+		return arg_list
 
 
 	def add_route(self, path, methods= 'GET'):
@@ -94,7 +106,7 @@ class Canteen:
 			return f(*args)
 		return decorator 	
 
-	def create_route(self, path, view_func, methods = 'GET'):
+	def create_route(self, path, view_func, methods):
 		new_route = Route(path, view_func, methods)
 		args = new_route.get_args()
 		self.routes.append(new_route)
