@@ -47,10 +47,14 @@ class Canteen:
 		if environ['QUERY_STRING']:
 			path, args = self.route_request(environ['PATH_INFO'], environ['REQUEST_METHOD'], environ['QUERY_STRING'])
 		else:
-			path = self.route_request(environ['PATH_INFO'], environ['REQUEST_METHOD'])
+			path, args = self.route_request(environ['PATH_INFO'], environ['REQUEST_METHOD'])
 
-		if path:
+
+		if path and args:
 			response_body = path(*args) #unpacks the arg dict returned from route_request
+			status = "200 OK"
+		elif path:
+			response_body = path() #unpacks the arg dict returned from route_request
 			status = "200 OK"
 		else:
 			response_body = "That is an unknown path"

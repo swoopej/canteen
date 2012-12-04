@@ -3,7 +3,7 @@ from Canteen import *
 app = Canteen()
 
 
-@app.add_route('/')
+@app.add_route('/index')
 def front_page():
 	return 'This is the front page'
 
