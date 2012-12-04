@@ -77,21 +77,21 @@ class Canteen:
 
 
 		for route in self.routes:
-			if route.path == path:
+			if route.path == path and request_method in route.get_methods():
 				return route.endpoint, arg_list
 		else:
 			return None
 
 
-	def add_route(self, path, method= 'GET'):
+	def add_route(self, path, methods= 'GET'):
 		'''decorates a user supplied function by adding path to self.routes'''
 		def decorator(f):
-			args = self.create_route(path, f)
+			args = self.create_route(path, f, methods)
 			return f(*args)
 		return decorator 	
 
-	def create_route(self, path, view_func):
-		new_route = Route(path, view_func)
+	def create_route(self, path, view_func, methods = 'GET'):
+		new_route = Route(path, view_func, methods)
 		args = new_route.get_args()
 		self.routes.append(new_route)
 		return args
