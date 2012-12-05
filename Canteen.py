@@ -4,10 +4,11 @@ from urlparse import parse_qs
 from rule import Route
 import re
 import cgitb
+
 #cgitb.enable()
 
 
-class Canteen:
+class Canteen(object):
 
 	def __init__(self):
 		self.routes = []
@@ -38,20 +39,20 @@ class Canteen:
 		return the response body as an iterable.
 		'''
 
-
+		request.update_method(environ)
 
 		self.environ = {} if environ is None else environ
 		self.start = start_response
 
-		path, args, method = self.route_request(environ)
-		print '\n\npath: ', path
+		callback, args, method = self.route_request(environ)
+		print '\n\ncallback: ', callback
 
 
-		if path and args:
-			response_body = path(*args) #unpacks the arg dict returned from route_request
+		if callback and args:
+			response_body = callback(*args) #unpacks the arg dict returned from route_request
 			status = "200 OK"
-		elif path:
-			response_body = path() #no args
+		elif callback:
+			response_body = callback() #no args
 			status = "200 OK"
 		else:
 			response_body = "That is an unknown path"
@@ -104,17 +105,26 @@ class Canteen:
 		'''decorates a user supplied function by adding path to self.routes'''
 		def decorator(f):
 			args = self.create_route(path, f, methods)
-			return f(*args)
-		return decorator 	
+			def wrapper_f(*args):
+				print 'inside wrapper_f'
+				f(*args)
+			return wrapper_f
+		return decorator 	 
 
 	def create_route(self, path, view_func, methods):
 		new_route = Route(path, view_func, methods)
-		args = new_route.get_args()
 		self.routes.append(new_route)
-		return args
 
 
+class Request(object): 
 
+	def _init__(self):
+		self.method = None
+
+	def update_method(self, environ):
+		self.method = environ['REQUEST_METHOD']
+
+request = Request()
 
 
 if __name__ == "__main__":
