@@ -44,6 +44,7 @@ class Canteen:
 		self.start = start_response
 
 		path, args, method = self.route_request(environ)
+		print '\n\npath: ', path
 
 
 		if path and args:
