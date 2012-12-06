@@ -1,15 +1,15 @@
 from wsgiref.simple_server import make_server
 from cgi import escape
-from urlparse import parse_qs
+
 from rule import Route
+
+import urlparse
 import re
 import cgitb
 
 #cgitb.enable()
 
-
 class Canteen(object):
-
     def __init__(self):
         self.routes = []
 
@@ -25,8 +25,6 @@ class Canteen(object):
 
         httpd.serve_forever()
 
-
-
     def wsgi_app(self, environ, start_response):
         '''
         called by the server with the environ dict and the start_response function
@@ -40,18 +38,10 @@ class Canteen(object):
         '''
 
         request.update(environ)
+        callback, callback_args, method = self.route_request(environ)
 
-        self.environ = {} if environ is None else environ
-
-        callback, args, method = self.route_request(environ)
-        print '\n\ncallback: ', callback
-
-
-        if callback and args:
-            response_body = callback(*args) #how to get several separate strings from list items?
-            status = "200 OK"
-        elif callback:
-            response_body = callback() #no args
+        if callback:
+            response_body = callback(*callback_args)
             status = "200 OK"
         else:
             response_body = "That is an unknown path"
@@ -63,72 +53,50 @@ class Canteen(object):
         return [response_body]
 
     def route_request(self, environ):
-
         path = environ['PATH_INFO']
         request_method = environ['REQUEST_METHOD']
-        query_string =  environ['QUERY_STRING']
 
-        #the environ variable CONTENT_LENGTH may be empty or missing
+        # The environ variable CONTENT_LENGTH may be empty or missing
         try:
             request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+            wsgi_input = environ['wsgi.input'].read(request_body_size)
         except (ValueError):
             request_body_size = 0
-            
-        wsgi_input = environ['wsgi.input'].read(request_body_size)
-        post_data = parse_qs(wsgi_input)
 
-        #parses url query string if present and method is get
-        arg_list = []
-        if request_method == 'GET' and query_string:
-            arg_list = self.parse_args(query_string)
-
-
+        # Search through routes for best match. Dynamic routes should
+        # be secondary to absolute routes
+        self.routes = sorted(self.routes, key=lambda x: x.dynamic)
         for route in self.routes:
-            if route.path == path and request_method in route.get_methods():
-                return route.endpoint, arg_list, request_method
-        else:
-            return None, None, None
+            match = re.match(route.route, path)
+            if match and request_method in route.get_methods():
+                return route.callback, match.groups(), request_method
 
-    def parse_args(self, query_string):
-        '''parses the query string in url if present'''
-        arg_list = []
-        args = parse_qs(query_string)
-        for k, v in args.items():
-            arg_list.append(v)
-        return arg_list
-
+        return None, None, None
 
     def add_route(self, path, methods= 'GET'):
         '''decorates a user supplied function by adding path to self.routes'''
         def decorator(f):
-            args = self.create_route(path, f, methods)
-            def wrapper_f(*args):
-                print 'inside wrapper_f'
-                f(*args)
-            return wrapper_f
+            r = Route(path, f, methods)
+            self.routes.append(r)
         return decorator     
-
-    def create_route(self, path, view_func, methods):
-        new_route = Route(path, view_func, methods)
-        self.routes.append(new_route)
 
     def set_headers(self, response_body):
         headers = [('Content_Type', 'text/html'),
                     ('Content_Length', str(len(response_body)))]
         return headers
 
-
 class Request(object): 
-
     def _init__(self):
         self.method = None
         self.cookies = None
 
     def update(self, environ):
+        assert environ, 'Being passed a bogus environ'
+        self.args = urlparse.parse_qs(environ['QUERY_STRING'])
         self.method = environ['REQUEST_METHOD']
+
         if environ['HTTP_COOKIE']:
             self.cookies = environ['HTTP_COOKIE']
-
 
 request = Request()
 
