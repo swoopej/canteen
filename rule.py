@@ -8,6 +8,7 @@ class Route:
 		self.endpoint = func
 		self.args = []
 		self.methods = request_methods
+		self.
 		tokens = path.split('/')
 		for token in tokens:
 			if re.match('<\w+>', token):

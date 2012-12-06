@@ -1,5 +1,4 @@
 from Canteen import *
-import pdb
 
 app = Canteen()
 
@@ -18,9 +17,14 @@ def goodday_sir(user):
 	print 'request method: ', request.method
 	return 'Good day to you ' + str(user)
 
-@app.add_route('/yolo/<userone>/', methods = ['GET', 'POST'])
-def yolo(userone):
-	return 'user one: ' + str(userone)
+@app.add_route('/yolo/<userone>/<usertwo>', methods = ['GET', 'POST'])
+def yolo(userone, usertwo):
+	return 'user one: ' + str(userone) + '\nuser two: ' + str(usertwo)
+
+@app.add_route('/soloyolo/<solo>', methods = ['GET', 'POST'])
+def solo_yolo(solo):
+    response = 'hello there ' + str(solo)
+    return response
 
 app.run_server()
 
