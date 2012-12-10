@@ -2,7 +2,6 @@ from Canteen import *
 
 app = Canteen()
 
-
 @app.add_route('/index', methods = ['GET', 'POST'])
 def front_page():
     print 'request method ', request.method
