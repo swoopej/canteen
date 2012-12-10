@@ -1,11 +1,12 @@
+import thread
+import urlparse
+import re
+import cgitb
+
 from wsgiref.simple_server import make_server
 from cgi import escape
 
 from rule import Route
-
-import urlparse
-import re
-import cgitb
 
 #cgitb.enable()
 
@@ -98,7 +99,38 @@ class Request(object):
         if environ['HTTP_COOKIE']:
             self.cookies = environ['HTTP_COOKIE']
 
-request = Request()
+class RequestRouter(object):
+    """A router class that dynamically dispatches (using the executing
+    thread's id) to the intended request object. Needed if the wsgi
+    server implementation is threaded.""" 
+
+    def __init__(self):
+        self.reqs = {}
+
+    def _get_or_set_req(self):
+        req = self.reqs.get(thread.get_ident())
+        if not req:
+            req = Request()
+            self.reqs[thread.get_ident()] = req
+        return req        
+
+    def __getattr__(self, attr):
+        req = self._get_or_set_req()
+        return getattr(req, attr)
+
+    def __setattr__(self, attr, value):
+        # Special case used in constructor
+        if attr == 'reqs':
+            object.__setattr__(self, attr, value)
+            return
+
+        req = self._get_or_set_req()
+        setattr(req, attr, value)
+
+    def _remove_req(self):
+        del self.reqs[thread.get_ident()]
+
+request = RequestRouter()
 
 
 if __name__ == "__main__":
