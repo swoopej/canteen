@@ -58,13 +58,18 @@ class Canteen(object):
         return [response.body]
 
     def make_response(self, callback, callback_args):
-        response_body = callback(*callback_args)
-        if isinstance(response_body, Response):
-            return response_body
+        user_response = callback(*callback_args)
+        if isinstance(user_response, Response):
+            return user_response
         resp = Response()
-        resp.body = response_body
-        resp.headers = self.set_headers(response_body)
+        resp.body = user_response
+        resp.headers = self.set_headers(user_response)
         return resp
+
+    def set_headers(self, response_body):
+        headers = [('Content_Type', 'text/html'),
+                    ('Content_Length', str(len(response_body)))]
+        return headers
 
 
 
@@ -96,12 +101,10 @@ class Canteen(object):
             self.routes.append(r)
         return decorator     
 
-    def set_headers(self, response_body):
-        headers = [('Content_Type', 'text/html'),
-                    ('Content_Length', str(len(response_body)))]
-        return headers
 
 class Request(object): 
+    '''Request object that is accessible to the user'''
+
     def _init__(self):
         self.method = None
         self.cookies = None
@@ -113,6 +116,11 @@ class Request(object):
 
         if environ['HTTP_COOKIE']:
             self.cookies = environ['HTTP_COOKIE']
+
+
+            # do something with the cookie here?
+
+
 
 class RequestRouter(object):
     """A router class that dynamically dispatches (using the executing
