@@ -38,26 +38,20 @@ class Canteen(object):
         return the response body as an iterable.
         '''
 
-        request.update(environ)
+        request.set_vars(environ)
         callback, callback_args, method = self.route_request(environ)
 
         if callback:
             response = self.make_response(callback, callback_args)
-
-
-            # response_body = callback(*callback_args)
-            # status = "200 OK"
         else:
-            response = Response()
-            response.body = "That is an unknown path"
-            response.status = "404 Not Found"
+            response = self.not_found()
 
-        #response_headers = self.set_headers(response_body)
 
         start_response(response.status, response.headers)
         return [response.body]
 
     def make_response(self, callback, callback_args):
+        '''called if the wsgi router finds a route object matching the path'''
         user_response = callback(*callback_args)
         if isinstance(user_response, Response):
             return user_response
@@ -66,11 +60,16 @@ class Canteen(object):
         resp.headers = self.set_headers(user_response)
         return resp
 
+    def not_found(self):
+        resp = Response()
+        resp.body = "That is an unknown path"
+        resp.status = "404 Not Found"
+        return resp
+
     def set_headers(self, response_body):
         headers = [('Content_Type', 'text/html'),
                     ('Content_Length', str(len(response_body)))]
         return headers
-
 
 
     def route_request(self, environ):
@@ -109,9 +108,9 @@ class Request(object):
         self.method = None
         self.cookies = None
 
-    def update(self, environ):
+    def set_vars(self, environ):
         assert environ, 'Being passed a bogus environ'
-        self.args = urlparse.parse_qs(environ['QUERY_STRING'])
+        self.querystring = urlparse.parse_qs(environ['QUERY_STRING'])
         self.method = environ['REQUEST_METHOD']
 
         if environ['HTTP_COOKIE']:
@@ -179,6 +178,7 @@ class Response(object):
         if httponly:
             cookie_string += 'HttpOnly;'
         self.cookies = cookie_string
+        self.headers.append(('Cookie', self.cookies))
 
 
 

@@ -11,7 +11,8 @@ def front_page():
 def hello_sir(user):
     resp = Response()
     resp.set_cookie('user', 'swoopej', max_age=300)
-    return resp.cookies + str(user)
+    resp.body = "there should be a cookie here"
+    return resp
 
 @app.add_route('/goodbye/<str:user>/', methods = ['GET', 'POST'])
 def goodday_sir(user):
