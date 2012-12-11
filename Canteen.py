@@ -42,16 +42,31 @@ class Canteen(object):
         callback, callback_args, method = self.route_request(environ)
 
         if callback:
-            response_body = callback(*callback_args)
-            status = "200 OK"
+            response = self.make_response(callback, callback_args)
+
+
+            # response_body = callback(*callback_args)
+            # status = "200 OK"
         else:
-            response_body = "That is an unknown path"
-            status = "404 Not Found"
+            response = Response()
+            response.body = "That is an unknown path"
+            response.status = "404 Not Found"
 
-        response_headers = self.set_headers(response_body)
+        #response_headers = self.set_headers(response_body)
 
-        start_response(status, response_headers)
-        return [response_body]
+        start_response(response.status, response.headers)
+        return [response.body]
+
+    def make_response(self, callback, callback_args):
+        response_body = callback(*callback_args)
+        if isinstance(response_body, Response):
+            return response_body
+        resp = Response()
+        resp.body = response_body
+        resp.headers = self.set_headers(response_body)
+        return resp
+
+
 
     def route_request(self, environ):
         path = environ['PATH_INFO']
@@ -129,6 +144,35 @@ class RequestRouter(object):
 
     def _remove_req(self):
         del self.reqs[thread.get_ident()]
+
+class Response(object):
+
+    def __init__(self):
+        self.cookies = '' #should cookies be a class with it's own attrs?
+        self.status = '200 OK'
+        self.body = ''
+        self.headers = [('Content_Type', 'text/html'),
+            ('Content_Length', str(len(self.body)))]
+
+    def set_cookie(self, key, value='', max_age=None, expires=None, 
+                   path='/', domain=None, secure=False, httponly=False):
+        '''must at least be called with a key and a value'''
+        cookie_string = key + "=" + value + ';'
+        if max_age: #number of seconds, defaults to user browser session
+            cookie_string + 'Max-Age=' + str(max_age) + ';'
+        if expires: #should a unix datetime stamp
+            cookie_string + 'Expires=' + expires + ';'
+        if path != '/':
+            cookie_string += 'Path=' + path + ';'
+        if domain:
+            cookie_string += 'Domain' + domain + ';'
+        if secure:
+            cookie_string += 'Secure;'
+        if httponly:
+            cookie_string += 'HttpOnly;'
+        self.cookies = cookie_string
+
+
 
 request = RequestRouter()
 

@@ -9,7 +9,9 @@ def front_page():
 
 @app.add_route('/hello/<str:user>/')
 def hello_sir(user):
-    return 'Top of the morning to you ' + str(user)
+    resp = Response()
+    resp.set_cookie('user', 'swoopej', max_age=300)
+    return resp.cookies + str(user)
 
 @app.add_route('/goodbye/<str:user>/', methods = ['GET', 'POST'])
 def goodday_sir(user):
@@ -18,6 +20,7 @@ def goodday_sir(user):
 
 @app.add_route('/yolo/<str:userone>/<str:usertwo>', methods = ['GET', 'POST'])
 def yolo(userone, usertwo):
+    response = Response()
     return 'user one: ' + str(userone) + '\nuser two: ' + str(usertwo)
 
 @app.add_route('/soloyolo/<int:id>', methods = ['GET', 'POST'])
