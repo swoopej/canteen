@@ -71,7 +71,6 @@ class Canteen(object):
                     ('Content_Length', str(len(response_body)))]
         return headers
 
-
     def route_request(self, environ):
         path = environ['PATH_INFO']
         request_method = environ['REQUEST_METHOD']
@@ -93,10 +92,12 @@ class Canteen(object):
 
         return None, None, None
 
-    def add_route(self, path, methods= 'GET'):
+    def add_route(self, path, methods='GET'):
         '''decorates a user supplied function by adding path to self.routes'''
         def decorator(f):
             r = Route(path, f, methods)
+            if r in self.routes:
+                raise Exception('duplicate route added %s' % r.route)
             self.routes.append(r)
         return decorator     
 
@@ -118,7 +119,6 @@ class Request(object):
 
 
             # do something with the cookie here?
-
 
 
 class RequestRouter(object):
